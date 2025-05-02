@@ -22,7 +22,11 @@ public class JournalEntryController {
 
     @GetMapping
     public ResponseEntity<List<JournalEntry>> getAllEntry() {
-        return new ResponseEntity<>(new ArrayList<>(journalEntryService.getAll()), HttpStatus.OK);
+        List<JournalEntry> all = new ArrayList<>(journalEntryService.getAll());
+        if (!all.isEmpty()) {
+            return new ResponseEntity<>(all, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/id/{reqId}")

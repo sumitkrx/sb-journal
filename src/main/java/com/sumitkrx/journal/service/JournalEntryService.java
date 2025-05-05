@@ -1,12 +1,13 @@
 package com.sumitkrx.journal.service;
 
 import com.sumitkrx.journal.entity.JournalEntry;
+import com.sumitkrx.journal.entity.User;
 import com.sumitkrx.journal.repository.JournalEntryRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,20 +15,34 @@ import java.util.Optional;
 public class JournalEntryService {
     @Autowired
     private JournalEntryRepository journalEntryRepository;
+    @Autowired
+    private UserService userService;
 
-    public void saveEntry(JournalEntry journalEntry){
+    public void saveEntry(JournalEntry journalEntry, String userName) {
+        User user = userService.findByUserName(userName);
+        journalEntry.setDate(LocalDateTime.now());
+        JournalEntry saved = journalEntryRepository.save(journalEntry);
+        user.getEntries().add(saved);
+        userService.saveEntry(user);
+    }
+
+    public void saveEntry(JournalEntry journalEntry) {
+        journalEntry.setDate(LocalDateTime.now());
         journalEntryRepository.save(journalEntry);
     }
 
-    public List<JournalEntry> getAll(){
+    public List<JournalEntry> getAll() {
         return journalEntryRepository.findAll();
     }
 
-    public Optional<JournalEntry> getEntryById(ObjectId id){
+    public Optional<JournalEntry> getEntryById(ObjectId id) {
         return journalEntryRepository.findById(id);
     }
 
-    public void deleteById(ObjectId id){
+    public void deleteById(ObjectId id, String userName) {
+        User currentUser = userService.findByUserName(userName);
+        currentUser.getEntries().removeIf(entry -> entry.getId().equals(id));
+        userService.saveEntry(currentUser);
         journalEntryRepository.deleteById(id);
     }
 }
